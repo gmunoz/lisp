@@ -102,3 +102,24 @@
 (define (d.make-closure fun env)
   (lambda (values current.env)
 	(fun values env) ) )
+
+; 1.6.2
+(define (s.make-function variables body env)
+  (lambda (values current.env)
+	(let ((old-bindings
+		   (map (lambda (var val)
+				      (let ((old-value (getprop var 'apval)))
+						(putprop var 'apval val)
+						(cons var old-value) ) )
+				variables
+				values ) ))
+	  (let ((result (eprogn body current.env)))
+		(for-each (lambda (b) (putprop (car b) 'apval (cdr b)))
+				  old-bindings )
+		result ) ) ) )
+
+(define (s.lookup id env)
+  (getprop id 'apval) )
+
+(define (s.update! id env value)
+  (putprop id 'apval value) )
