@@ -1,0 +1,7 @@
+(define (evaluate e env)
+  (if (atom? e)
+	(cond ((symbol? e) (lookup e env))
+		  ((or (number? e)(string? e)(char? e)(boolean? e)(vector? e))
+		   e )
+		  (else (wrong "Cannot evaluate" e)) )
+	) )

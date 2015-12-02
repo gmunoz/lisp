@@ -1,0 +1,10 @@
+#lang racket
+(define foo '(1 2 3))
+(define bar '((1) (2) (3 4)))
+(caar bar)
+(cdar bar)
+(cdr bar)
+(car '((2) (3 4)))
+(cons 1 2)
+(cons (cons 1 2) '((3 4) (5 6)))
+
