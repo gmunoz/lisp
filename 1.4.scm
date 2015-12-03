@@ -159,3 +159,10 @@
 (defprimitive + + 2)
 (defprimitive eq? eq? 2)
 (defprimitive < < 2)
+
+; 1.8
+(define (chapter1-scheme)
+  (define (toplevel)
+	(display (evaluate (read) env.global))
+	(toplevel) )
+  (toplevel) )
