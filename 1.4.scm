@@ -1,3 +1,17 @@
+#!r5rs
+
+; Define some functions needed not included in scheme
+(define (atom? a)
+  (cond ((number? a) #t)
+		((symbol? a) #t)
+		((string? a) #t)
+		(else #f) ) )
+
+(define wrong
+  (lambda (msg . stuff)
+	msg))
+
+; 1.4
 (define (evaluate e env)
   (if (atom? e)
 	(cond ((symbol? e) (lookup e env))
@@ -10,7 +24,7 @@
 				    (evaluate (caddr e) env)
 					(evaluate (cadddr e) env) ))
 	  ((begin)  (eprogn (cdr e) env))
-	  ((set!)   (udpate! (cadr e) env (evaluate (caddr e) env)))
+	  ((set!)   (update! (cadr e) env (evaluate (caddr e) env)))
 	  ((lambda) (make-function (cadr e) (cddr e) env))
 	  (else     (invoke (evaluate (car e) env)
 						(evlis (cdr e) env) )) ) ) )
@@ -76,11 +90,21 @@
   (lambda (values)
 	(eprogn body (extend env variables values)) ) )
 
+; 1.6.1 - Dynamic and Lexical Binding
 (define (d.evaluate e env)
-  (if (atom? e) ...
+  (if (atom? e)
+	(cond ((symbol? e) (lookup e env))
+		  ((or (number? e)(string? e)(char? e)(boolean? e)(vector? e))
+		   e )
+		  (else (wrong "Cannot evaluate" e)) )
 	(case (car e)
-	  ...
-	  ((function)   ; Syntax: (function (lambda variables body)) 1.6.1
+	  ((quote)  (cadr e))
+	  ((if)     (if (d.evaluate (cadr e) env)
+				    (d.evaluate (caddr e) env)
+					(d.evaluate (cadddr e) env) ))
+	  ((begin)  (eprogn (cdr e) env))
+	  ((set!)   (update! (cadr e) env (d.evaluate (caddr e) env)))
+	  ((function)   ; Syntax: (function (lambda variables body))
 	   (let* ((f   (cadr e))
 			  (fun (d.make-function (cadr f) (cddr f) env)) )
 		 (d.make-closure fun env) ) )
@@ -104,6 +128,12 @@
 	(fun values env) ) )
 
 ; 1.6.2
+; define some dummy methods to compile
+(define (getprop var symbol)
+  (wrong "getprop not implemented" var) )
+(define (putprop var symbol val)
+  (wrong "putprop not implemented" var) )
+
 (define (s.make-function variables body env)
   (lambda (values current.env)
 	(let ((old-bindings
@@ -145,7 +175,7 @@
 				   (list 'name values) ) ) ) ) ) ) )
 
 (definitial t #t)
-(definitial f the-false-value)
+(definitial f #f)
 (definitial nil '())
 
 (definitial foo)
