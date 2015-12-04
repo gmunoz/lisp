@@ -1,5 +1,3 @@
-#!r5rs
-
 ; From a guile repl: (load "1.4.scm")
 
 ; Define some functions needed not included in scheme
