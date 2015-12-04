@@ -3,11 +3,8 @@
 ; From a guile repl: (load "1.4.scm")
 
 ; Define some functions needed not included in scheme
-(define (atom? a)
-  (cond ((number? a) #t)
-		((symbol? a) #t)
-		((string? a) #t)
-		(else #f) ) )
+(define atom?
+  (lambda (x) (not (pair? x))))
 
 (define wrong
   (lambda (msg . stuff)
