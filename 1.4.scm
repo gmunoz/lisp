@@ -38,6 +38,7 @@
 
 (define empty-begin 813)
 
+; evaluate list => evlis
 (define (evlis exps env)
   (if (pair? exps)
 	  (cons (evaluate (car exps) env)
