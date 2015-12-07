@@ -45,3 +45,27 @@
 				   (extend env (cadr fn) args)
 				   fenv ) )
 		(else (wrong "Incorrect functional term" fn)) )
+
+(define (evaluate-application2 fn args env fenv)
+  (cond ((symbol? fn)
+		 ((lookup fn fenv) args) )
+		((and (pair? fn) (eq? (car fn) 'lambda))
+		 (f.eprogn (cddr fn)
+				   (extend env (cadr fn) args)
+				   fenv ) )
+		(else (evaluate-application2                 ; ** Modified **
+			   (f.evaluate fn env fenv) args env fenv )) ) )
+
+(define (evaluate-application3 fn args env fenv)
+  (cond
+	((symbol? fn)
+	 (let ((fun (lookup fn fenv)))
+	   (if fun (fun args)
+		 (evaluate-application3 (lookup fn env) args env fenv)) ) )
+	((and (pair? fn) (eq? (car fn) 'lambda))
+	 (f.eprogn (cddr fn)
+			   (extend env (cadr fn) args)
+			   fenv ) )
+	(else (evaluate-application3
+		   (f.evaluate fn env fenv) args env fenv )) ) )
+	... ) )
