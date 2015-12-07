@@ -183,6 +183,12 @@
 		(df.evaluate (car e*) env fenv denv) )
 	empty-begin ) )
 
+(define (df.evlis exps env fenv denv)
+  (if (pair? exps)
+	(cons (df.evaluate (car exps) env fenv denv)
+		  (df.evlis (cdr exps) env fenv denv) )
+	'() ) )
+
 ; 2.2.3 Using Lisp(2)
 (define fenv.global '())
 
