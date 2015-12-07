@@ -18,6 +18,15 @@
 	   (cond ((symbol? (cadr e))
 			  (lookup (cadr e) fenv) )
 			 (else (wrong "Incorrect function" (cadr e))) ) )
+	  ((flet)
+	   (f.eprogn
+		 (cddr e)
+		 env
+		 (extend fenv
+				 (map car (cadr e) )
+				 (map (lambda (def)
+						(f.make-function (cadr def) (cddr def) env fenv) )
+					  (cadr e) ) ) ))
 	  (else     (evaluate-application (car e)
 									  (f.evlis (cdr e) env fenv)
 									  env
@@ -81,6 +90,7 @@
 
 ; 2.2.3 Using Lisp(2)
 (define fenv.global '())
+
 (define-syntax definitial-function
   (syntax-rules ()
 	((definitial-function name)
