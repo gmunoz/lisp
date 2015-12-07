@@ -14,6 +14,10 @@
 						 env
 						 (f.evaluate (caddr e) env fenv) ))
 	  ((lambda) (f.make-function (cadr e) (cddr e) env fenv))
+	  ((function)
+	   (cond ((symbol? (cadr e))
+			  (lookup (cadr e) fenv) )
+			 (else (wrong "Incorrect function" (cadr e))) ) )
 	  (else     (evaluate-application (car e)
 									  (f.evlis (cdr e) env fenv)
 									  env
@@ -68,4 +72,9 @@
 			   fenv ) )
 	(else (evaluate-application3
 		   (f.evaluate fn env fenv) args env fenv )) ) )
-	... ) )
+
+(define funcall
+  (lambda (args)
+	(if (> (length args) 1)
+	    (invoke (car args) (cdr args))
+		(wrong "Incorrect arity" 'funcall) ) ) )
