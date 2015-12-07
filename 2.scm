@@ -189,6 +189,78 @@
 		  (df.evlis (cdr exps) env fenv denv) )
 	'() ) )
 
+; 2.5.3 Dynamic Variables without a Special Form
+
+(define (dd.evaluate e env denv)
+  (if (atom? e)
+	  (cond ((symbol? e) (lookup e env))
+			((or (number? e)(string? e)(char? e)(boolean? e)(vector? e)) e)
+			(else (wrong "Cannot evaluate" e)) )
+	  (case (car e)
+		((quote) (cadr e))
+		((if) (if (dd.evaluate (cadr e) env denv)
+				  (dd.evaluate (caddr e) env denv)
+				  (dd.evaluate (cadddr e) env denv) ))
+		((begin) (dd.eprogn (cdr e) env denv))
+		((set!) (update! (cadr e)
+						 env
+						 (dd.evaluate (caddr e) env denv)))
+		((lambda) (dd.make-function (cadr e) (cddr e) env))
+		(else (invoke (dd.evaluate (car e) env denv)
+					  (dd.evlis (cdr e) env denv)
+					  denv )) ) ) )
+
+(define (dd.make-function variables body env)
+  (lambda (values denv)
+	(dd.eprogn body (extend env variables values) denv) ) )
+
+(define (dd.evlis e* env denv)
+  (if (pair? e*)
+	(if (pair? (cdr e*))
+	    (cons (dd.evaluate (car e*) env denv)
+			  (dd.evlis (cdr e*) env denv) )
+		(list (dd.evaluate (car e*) env denv)) )
+	'() ) )
+
+(define (dd.eprogn e* env denv)
+  (if (pair? e*)
+	(if (pair? (cdr e*))
+	    (begin (dd.evaluate (car e*) env denv)
+			   (dd.eprogn (cdr e*) env denv) )
+		(dd.evaluate (car e*) env denv) )
+	empty-begin ) )
+
+(define-syntax definitial  ; from chapter 1
+  (syntax-rules ()
+	((definitial name)
+	 (begin (set! env.global (cons (cons 'name 'void) env.global))
+			'name ) )
+	((definitial name value)
+	 (begin (set! env.global (cons (cons 'name value) env.global))
+			'name ) ) ) )
+
+(definitial bind/de  ; bind-with-dynamic-extent
+  (lambda (values denv)
+	(if (= 3 (length values))
+	  (let ((tag (car values))
+			(value (cadr values))
+			(thunk (caddr values)) )
+		(invoke thunk '() (extend denv (list tag) (list value))) )
+	  (wrong "Incorrect arity" 'bind/de) ) ) )
+
+(definitial assoc/de
+  (lambda (values current.denv)
+	(if (= 2 (length values))
+	    (let ((tag     (car values))
+			  (default (cadr values)) )
+		  (let look ((denv current.denv))
+			(if (pair? denv)
+			    (if (eqv? tag (caar denv))
+				    (cdar denv)
+					(look (cdr denv)) )
+				(invoke default (list tag) current.denv) ) ) )
+		(wrong "Incorrect arity" 'assoc/de) ) ) )
+
 ; 2.2.3 Using Lisp(2)
 (define fenv.global '())
 
