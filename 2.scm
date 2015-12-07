@@ -117,3 +117,49 @@
 	(display (f.evaluate (read) env.global fenv.global))
 	(toplevel) )
   (toplevel) )
+
+; Chapter 1
+
+(define atom?
+  (lambda (x) (not (pair? x))))
+
+(define wrong
+  (lambda (msg . stuff)
+	msg))
+
+(define (lookup id env)
+  (if (pair? env)
+	(if (eq? (caar env) id)
+	    (cdar env)
+		(lookup id (cdr env)) )
+	(wrong "No such binding" id) ) )
+
+(define (update! id env value)
+  (if (pair? env)
+	  (if (eq? (caar env) id)
+		  (begin (set-cdr! (car env) value)
+				 value )
+		  (update! id (cdr env) value) )
+	  (wrong "No such binding" id) ) )
+
+(define (extend env variables values)
+  (cond ((pair? variables)
+		 (if (pair? values)
+		     (cons (cons (car variables) (car values))
+				   (extend env (cdr variables) (cdr values)) )
+			 (wrong "Too less values") ) )
+		((null? variables)
+		     (if (null? values)
+			   env
+			   (wrong "Too much values") ) )
+		((symbol? variables) (cons (cons variables values) env)) ) )
+
+(define empty-begin 813)
+
+(define (invoke fn args)
+  (if (procedure? fn)
+	  (fn args)
+	  (wrong "Not a function" fn) ) )
+
+(define env.init '())
+(define env.global env.init)
