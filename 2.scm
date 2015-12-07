@@ -16,7 +16,10 @@
 	  ((lambda) (f.make-function (cadr e) (cddr e) env fenv))
 	  ((function)
 	   (cond ((symbol? (cadr e))
-			  (lookup (cadr e) fenv) )
+			  (f.lookup (cadr e) fenv) )
+			 ((and (pair? (cadr e)) (eq? (car (cadr e)) 'lambda))
+			  (f.make-function
+				(cadr (cadr e)) (cddr (cadr e)) env fenv ) )
 			 (else (wrong "Incorrect function" (cadr e))) ) )
 	  ((flet)
 	   (f.eprogn
@@ -27,7 +30,17 @@
 				 (map (lambda (def)
 						(f.make-function (cadr def) (cddr def) env fenv) )
 					  (cadr e) ) ) ))
-	  (else     (evaluate-application (car e)
+	  ((labels)
+	   (let ((new-fenv (extend fenv
+							   (map car (cadr e))
+							   (map (lambda (def) 'void) (cadr e)) )))
+		 (for-each (lambda (def)
+					 (update! (car def)
+							  new-fenv
+							  (f.make-function (cadr def) (cddr def) env new-fenv) ) )
+				   (cadr e) )
+		 (f.eprogn (caddr e) env new-fenv) ) )
+	  (else     (f.evaluate-application (car e)
 									  (f.evlis (cdr e) env fenv)
 									  env
 									  fenv )) ) ) )
@@ -49,6 +62,23 @@
 (define (f.make-function variables body env fenv)
   (lambda (values)
 	(f.eprogn body (extend env variables values) fenv) ) )
+
+(define (f.evaluate-application fn args env fenv)
+  (cond ((symbol? fn)
+		 ((f.lookup fn fenv) args) )
+		((and (pair? fn) (eq? (car fn) 'lambda))
+		 (f.eprogn (cddr fn)
+				   (extend env (cadr fn) args)
+				   fenv ) )
+		(else (wrong "Incorrect functional term" fn)) ) )
+
+(define (f.lookup id fenv)
+  (if (pair? fenv)
+	  (if (eq? (caar fenv) id)
+		  (cdar fenv)
+		  (f.lookup id (cdr fenv)) )
+	  (lambda (values)
+		(wrong "No such functional binding" id) ) ) )
 
 (define (evaluate-application fn args env fenv)
   (cond ((symbol? fn)
