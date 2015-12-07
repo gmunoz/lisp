@@ -51,13 +51,14 @@
 	(f.eprogn body (extend env variables values) fenv) ) )
 
 (define (evaluate-application fn args env fenv)
-  (cond ((symbol? fn) ((lookup fn fenv) args))
-		 (invoke (lookup fn fenv) args) )
+  (cond ((symbol? fn)
+		 ((lookup fn fenv) args))
+		 ;(invoke (lookup fn fenv) args) )
 		((and (pair? fn) (eq? (car fn) 'lambda))
 		 (f.eprogn (cddr fn)
 				   (extend env (cadr fn) args)
 				   fenv ) )
-		(else (wrong "Incorrect functional term" fn)) )
+		(else (wrong "Incorrect functional term" fn)) ) )
 
 (define (evaluate-application2 fn args env fenv)
   (cond ((symbol? fn)
