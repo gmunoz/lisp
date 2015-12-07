@@ -78,3 +78,32 @@
 	(if (> (length args) 1)
 	    (invoke (car args) (cdr args))
 		(wrong "Incorrect arity" 'funcall) ) ) )
+
+; 2.2.3 Using Lisp(2)
+(define fenv.global '())
+(define-syntax definitial-function
+  (syntax-rules ()
+	((definitial-function name)
+	 (begin (set! fenv.global (cons (cons 'name 'void) fenv.global))
+			'name ) )
+	((definitial-function name value)
+	 (begin (set! fenv.global (cons (cons 'name value) fenv.global))
+			'name ) ) ) )
+
+(define-syntax defprimitive
+  (syntax-rules ()
+	((defprimitive name value arity)
+	 (definitial-function name
+	   (lambda (values)
+		 (if (= arity (length values))
+		     (apply value values)
+			 (wrong "Incorrect arity" (list 'name values)) ) ) ) ) ) )
+
+(defprimitive car car 1)
+(defprimitive cons cons 2)
+
+(define (chapter2-lisp2)
+  (define (toplevel)
+	(display (f.evaluate (read) env.global fenv.global))
+	(toplevel) )
+  (toplevel) )
