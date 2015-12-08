@@ -148,6 +148,17 @@
 							  (if (symbol? binding) the-non-initialized-marker
 								  (evaluate (cadr binding) env) ) )
 							(cadr e) ) ) ) )
+	  ((letrec)
+	   (let ((new-env (extend env
+							  (map car (cadr e))
+							  (map (lambda (binding) the-non-initialized-marker)
+								   (cadr e) ) )))
+		 (map (lambda (binding)
+				(update! (car binding)
+						 new-env
+						 (evaluate (cadr binding) new-env) ) )
+			  (cadr e) )
+		 (eprogn (cddr e) new-env) ) )
 	  (else     (invoke (evaluate (car e) env)
 						(evlis (cdr e) env) )) ) ) )
 
