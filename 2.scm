@@ -121,6 +121,8 @@
 
 ; Lisp1 from chapter1
 
+(define the-non-initialized-marker (cons 'non 'initialized))
+
 (define (evaluate e env)
   (if (atom? e)
 	(cond ((symbol? e) (lookup e env))
@@ -135,6 +137,17 @@
 	  ((begin)  (eprogn (cdr e) env))
 	  ((set!)   (update! (cadr e) env (evaluate (caddr e) env)))
 	  ((lambda) (make-function (cadr e) (cddr e) env))
+	  ((let)  ; ch 2.6.5
+	   (eprogn (cddr e)
+			   (extend env
+					   (map (lambda (binding)
+							  (if (symbol? binding) binding
+								  (car binding) ) )
+							(cadr e) )
+					   (map (lambda (binding)
+							  (if (symbol? binding) the-non-initialized-marker
+								  (evaluate (cadr binding) env) ) )
+							(cadr e) ) ) ) )
 	  (else     (invoke (evaluate (car e) env)
 						(evlis (cdr e) env) )) ) ) )
 
@@ -155,6 +168,16 @@
 (define (make-function variables body env)
   (lambda (values)
 	(eprogn body (extend env variables values)) ) )
+
+(define (lookup id env)
+  (if (pair? env)
+	(if (eq? (caar env) id)
+	    (let ((value (cdar env)))  ; 2.6.5
+		  (if (eq? value the-non-initialized-marker)
+			  (wrong "Uninitialized binding" id)
+			  value ) )
+		(lookup id (cdr env)) )
+	(wrong "No such binding" id) ) )
 
 (define (chapter2-lisp1)
   (define (toplevel)
@@ -346,13 +369,6 @@
 (define wrong
   (lambda (msg stuff)
 	(cons msg stuff)))
-
-(define (lookup id env)
-  (if (pair? env)
-	(if (eq? (caar env) id)
-	    (cdar env)
-		(lookup id (cdr env)) )
-	(wrong "No such binding" id) ) )
 
 (define (update! id env value)
   (if (pair? env)
