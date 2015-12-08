@@ -287,6 +287,7 @@
 
 (defprimitive car car 1)
 (defprimitive cons cons 2)
+(defprimitive * * 2)
 
 (define (chapter2-lisp2)
   (define (toplevel)
@@ -300,8 +301,8 @@
   (lambda (x) (not (pair? x))))
 
 (define wrong
-  (lambda (msg . stuff)
-	msg))
+  (lambda (msg stuff)
+	(cons msg stuff)))
 
 (define (lookup id env)
   (if (pair? env)
@@ -323,11 +324,11 @@
 		 (if (pair? values)
 		     (cons (cons (car variables) (car values))
 				   (extend env (cdr variables) (cdr values)) )
-			 (wrong "Too less values") ) )
+			 (wrong "Too less values" values) ) )
 		((null? variables)
 		     (if (null? values)
 			   env
-			   (wrong "Too much values") ) )
+			   (wrong "Too much values" values) ) )
 		((symbol? variables) (cons (cons variables values) env)) ) )
 
 (define empty-begin 813)
