@@ -239,6 +239,9 @@
 	 (begin (set! env.global (cons (cons 'name value) env.global))
 			'name ) ) ) )
 
+(define env.init '())
+(define env.global env.init)
+
 (definitial bind/de  ; bind-with-dynamic-extent
   (lambda (values denv)
 	(if (= 3 (length values))
@@ -333,6 +336,3 @@
   (if (procedure? fn)
 	  (fn args)
 	  (wrong "Not a function" fn) ) )
-
-(define env.init '())
-(define env.global env.init)
